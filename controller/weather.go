@@ -27,6 +27,7 @@ func ShowWeather(c *gin.Context) {
 	weather, err := getWeather(c.Query("lon"), c.Query("lat"))
 
 	if err != nil {
+		c.JSON(http.StatusBadRequest, weather)
 		panic(err)
 	}
 
@@ -34,6 +35,7 @@ func ShowWeather(c *gin.Context) {
 }
 
 func getWeather(long string, lat string) (model.WeatherOut, error) {
+	weatherout := model.WeatherOut{Conditions: "", Tempature: ""}
 	var weather model.WeatherGet
 	//Grab API key from helper function
 	apikey := getApiKey()
@@ -41,16 +43,14 @@ func getWeather(long string, lat string) (model.WeatherOut, error) {
 	res, err := http.Get("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + long + "&appid=" + apikey)
 
 	if err != nil {
-		panic(err)
+		return weatherout, err
 	}
 
 	//Decode json body into our weather struct for processing
 	err = json.NewDecoder(res.Body).Decode(&weather)
 	if err != nil {
-		panic(err)
+		return weatherout, err
 	}
-
-	weatherout := model.WeatherOut{Conditions: "", Tempature: ""}
 
 	//weather conditions are an array so we go through and add all to out outgoing struct.
 	for _, weath := range weather.Weather {
