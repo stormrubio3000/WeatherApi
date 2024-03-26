@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strconv"
 	"weather-api/model"
 
 	"github.com/gin-gonic/gin"
@@ -23,12 +24,27 @@ func getApiKey() string {
 }
 
 func ShowWeather(c *gin.Context) {
-	//Grab the latitude and longitude from the url in the get request and send to data manip func
-	weather, err := getWeather(c.Query("lon"), c.Query("lat"))
+	//Error handling checks for valid lat and log input
+	long := c.Query("lon")
+	lat := c.Query("lat")
 
+	if _, err := strconv.ParseFloat(lat, 32); err != nil || lat == "" {
+		c.JSON(http.StatusBadRequest, "latitude value is not valid")
+		return
+	}
+
+	if _, err := strconv.ParseFloat(long, 32); err != nil || long == "" {
+		c.JSON(http.StatusBadRequest, "longitude value is not valid")
+		return
+	}
+
+	//Send user lat and long to off to check weather and get back results
+	weather, err := getWeather(long, lat)
+
+	//Input errors should already be handled so this would most likely be a error with the weather service we are getting data from.
 	if err != nil {
-		c.JSON(http.StatusBadRequest, weather)
-		panic(err)
+		c.JSON(http.StatusInternalServerError, string(err.Error()))
+		return
 	}
 
 	c.JSON(http.StatusOK, weather)
