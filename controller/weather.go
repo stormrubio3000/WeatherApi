@@ -10,17 +10,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getApiKey() string {
+func getApiKey() (string, error) {
 	config := model.Config{}
 	//Grab api key from conf.json
-	file, _ := os.Open("conf.json")
-	defer file.Close()
-	err := json.NewDecoder(file).Decode(&config)
+	file, err := os.Open("conf.json")
 
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return config.Key
+
+	defer file.Close()
+	err = json.NewDecoder(file).Decode(&config)
+
+	if err != nil {
+		return "", err
+	}
+
+	return config.Key, nil
 }
 
 func ShowWeather(c *gin.Context) {
@@ -54,7 +60,12 @@ func getWeather(long string, lat string) (model.WeatherOut, error) {
 	weatherout := model.WeatherOut{Conditions: "", Tempature: ""}
 	var weather model.WeatherGet
 	//Grab API key from helper function
-	apikey := getApiKey()
+	apikey, err := getApiKey()
+
+	if err != nil {
+		return weatherout, err
+	}
+
 	//Get the full set of data from the weather api as an http response
 	res, err := http.Get("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + long + "&appid=" + apikey)
 
