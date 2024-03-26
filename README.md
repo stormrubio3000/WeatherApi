@@ -1,6 +1,6 @@
 Simple weather api using here:https://openweathermap.org/api.
 
-API key should be stored in the root dir of the project in a file named conf.json in the below format.
+API key should be stored in the root dir of the project in a file named conf.json in the following format.
 {
     "api-key": "api-key-here"
 }
